@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Send } from 'lucide-react'
 import Nav from '../components/Nav'
 import PipelineTimeline, { STAGE_ORDER, freshStages, type StageState } from '../components/PipelineTimeline'
+import { Appear, GlassButton, Reveal } from '../components/motion-bits'
 import { submitTicket, type InterruptPayload, type StreamEvent } from '../lib/api'
 
 const VIDEO_URL =
@@ -40,6 +41,24 @@ export default function Home() {
   const [result, setResult] = useState<{ status: string; reply: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const demoRef = useRef<HTMLDivElement>(null)
+  const [params] = useSearchParams()
+  const autoRan = useRef(false)
+
+  // ?demo=refund (or any preset-label fragment / index) auto-runs that preset —
+  // shareable demo links, and lets headless capture the paused pipeline.
+  useEffect(() => {
+    const wanted = params.get('demo')
+    if (!wanted || autoRan.current) return
+    autoRan.current = true
+    const preset =
+      PRESETS[Number(wanted)] ??
+      PRESETS.find((p) => p.label.toLowerCase().includes(wanted.toLowerCase()))
+    if (preset) {
+      setMessage(preset.message)
+      run(preset.message, true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function applyEvent(ev: StreamEvent) {
     if (ev.event === 'node') {
@@ -87,7 +106,7 @@ export default function Home() {
     }
   }
 
-  async function run(msg: string) {
+  async function run(msg: string, instantScroll = false) {
     if (!msg.trim() || running) return
     setRunning(true)
     setPaused(null)
@@ -98,7 +117,7 @@ export default function Home() {
       next[0].status = 'active'
       return next
     })
-    demoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    demoRef.current?.scrollIntoView({ behavior: instantScroll ? 'auto' : 'smooth', block: 'start' })
     try {
       await submitTicket(msg, applyEvent)
     } catch (e) {
@@ -131,61 +150,71 @@ export default function Home() {
             AI agents triage, research, and resolve — and pause for a human before any
             risky action.
           </p>
-          <button
-            onClick={() => demoRef.current?.scrollIntoView({ behavior: 'smooth' })}
-            className="animate-fade-rise-delay-2 liquid-glass rounded-full px-14 py-5 text-base text-foreground mt-12 hover:scale-[1.03] transition-transform cursor-pointer"
-          >
-            See it pause
-          </button>
+          <div className="animate-fade-rise-delay-2 mt-12">
+            <GlassButton
+              onClick={() => demoRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="liquid-glass rounded-full px-14 py-5 text-base text-foreground cursor-pointer"
+            >
+              See it pause
+            </GlassButton>
+          </div>
         </section>
       </div>
 
       {/* Live demo */}
-      <section ref={demoRef} className="max-w-5xl mx-auto px-6 py-24 scroll-mt-8">
-        <h2 className="font-display text-4xl sm:text-5xl mb-2">Submit a ticket</h2>
-        <p className="text-muted-foreground text-sm mb-8">
-          Safe requests resolve on their own. Risky ones stop and wait for you.
-        </p>
+      <section ref={demoRef} className="relative max-w-5xl mx-auto px-6 py-24 scroll-mt-8">
+        <Reveal>
+          <h2 className="font-display text-4xl sm:text-5xl mb-2">Submit a ticket</h2>
+          <p className="text-muted-foreground text-sm mb-8">
+            Safe requests resolve on their own. Risky ones stop and wait for you.
+          </p>
+        </Reveal>
 
-        <div className="flex flex-wrap gap-3 mb-6">
-          {PRESETS.map((p) => (
-            <button
-              key={p.label}
-              disabled={running}
-              onClick={() => {
-                setMessage(p.message)
-                run(p.message)
-              }}
-              className="liquid-glass rounded-full px-5 py-2.5 text-sm text-foreground hover:scale-[1.03] transition-transform cursor-pointer disabled:opacity-40"
+        <Reveal delay={0.08}>
+          <div className="flex flex-wrap gap-3 mb-6">
+            {PRESETS.map((p) => (
+              <GlassButton
+                key={p.label}
+                disabled={running}
+                onClick={() => {
+                  setMessage(p.message)
+                  run(p.message)
+                }}
+                className="liquid-glass rounded-full px-5 py-2.5 text-sm text-foreground cursor-pointer disabled:opacity-40"
+              >
+                {p.label}
+                {p.risky && <span className="ml-2 text-muted-foreground">will pause</span>}
+              </GlassButton>
+            ))}
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.16}>
+          <div className="liquid-glass rounded-2xl flex items-center gap-2 p-2 mb-10">
+            <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && run(message)}
+              placeholder="Describe the customer's problem…"
+              className="flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            />
+            <GlassButton
+              onClick={() => run(message)}
+              disabled={running || !message.trim()}
+              className="liquid-glass rounded-xl p-3 text-foreground cursor-pointer disabled:opacity-40"
+              aria-label="Submit ticket"
             >
-              {p.label}
-              {p.risky && <span className="ml-2 text-muted-foreground">will pause</span>}
-            </button>
-          ))}
-        </div>
+              <Send className="h-4 w-4" />
+            </GlassButton>
+          </div>
+        </Reveal>
 
-        <div className="liquid-glass rounded-2xl flex items-center gap-2 p-2 mb-10">
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && run(message)}
-            placeholder="Describe the customer's problem…"
-            className="flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-          />
-          <button
-            onClick={() => run(message)}
-            disabled={running || !message.trim()}
-            className="liquid-glass rounded-xl p-3 text-foreground hover:scale-[1.05] transition-transform cursor-pointer disabled:opacity-40"
-            aria-label="Submit ticket"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-
-        <PipelineTimeline stages={stages} />
+        <Reveal delay={0.24}>
+          <PipelineTimeline stages={stages} />
+        </Reveal>
 
         {paused && (
-          <div className="liquid-glass rounded-2xl p-6 mt-8">
+          <Appear className="liquid-glass rounded-2xl p-6 mt-8">
             <p className="font-display text-2xl">
               ⏸ Paused — <em className="not-italic text-muted-foreground">a human must approve this.</em>
             </p>
@@ -206,11 +235,11 @@ export default function Home() {
             >
               Open the approval inbox <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </Appear>
         )}
 
         {result && (
-          <div className="liquid-glass rounded-2xl p-6 mt-8">
+          <Appear className="liquid-glass rounded-2xl p-6 mt-8">
             <p className="font-display text-2xl">
               {result.status === 'resolved' ? 'Resolved' : 'Escalated'}
               {result.status === 'escalated' && (
@@ -222,13 +251,13 @@ export default function Home() {
                 {result.reply}
               </p>
             )}
-          </div>
+          </Appear>
         )}
 
         {error && (
-          <div className="liquid-glass rounded-2xl p-6 mt-8">
+          <Appear className="liquid-glass rounded-2xl p-6 mt-8">
             <p className="text-sm text-muted-foreground">Something went wrong: {error}</p>
-          </div>
+          </Appear>
         )}
       </section>
     </div>
