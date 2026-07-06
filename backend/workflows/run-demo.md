@@ -4,6 +4,7 @@
    (or set `LLM_PROVIDER=openai` + `OPENAI_API_KEY` in `.env` for quality).
 2. Backend: `uv run uvicorn backend.main:app --port 8000`
 3. Frontend: `cd frontend; npm run dev` → http://localhost:5173
+   (if 5173 is taken by another Vite app, it serves on 5174 — proxy still works)
 4. Demo script:
    - Click preset "How do I reset my password?" → pipeline flows straight
      through, policy-grounded reply, no pause.

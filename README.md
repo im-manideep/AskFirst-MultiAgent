@@ -28,7 +28,17 @@ uv run uvicorn backend.main:app --port 8000
 cd frontend; npm install; npm run dev
 ```
 
+The app serves at http://localhost:5173 (Vite picks 5174 if 5173 is busy —
+the `/api` proxy works either way).
+
 See `backend/workflows/run-demo.md` for the demo script.
+
+## Backend test scripts (run from the project root)
+```powershell
+uv run python -m backend.scripts.smoke_graph "How do I reset my password?"
+uv run python -m backend.scripts.test_interrupt start   # pause → new process → resume
+uv run python -m backend.scripts.test_escalation        # deterministic routing proof
+```
 
 ## Secrets
 `.env` is gitignored. Keys never reach the frontend; the frontend talks only

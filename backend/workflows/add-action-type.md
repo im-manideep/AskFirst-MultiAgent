@@ -8,4 +8,4 @@
 4. If policy governs it, make sure a KB document states the rule so the
    resolver can cite it (regenerate PDFs via `scripts/generate_kb.py`).
 5. Test: one safe and one risky ticket exercising the new type
-   (`backend/scripts/test_interrupt.py`).
+   (`uv run python -m backend.scripts.test_interrupt start "..."`).
