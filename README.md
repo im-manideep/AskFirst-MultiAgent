@@ -2,6 +2,16 @@
 
 <img width="1907" height="857" alt="001" src="https://github.com/user-attachments/assets/f0027766-0291-4e53-86e1-6c4c78a327c2" />
 
+<img width="1912" height="862" alt="002" src="https://github.com/user-attachments/assets/a0cf4fbb-cba0-4115-9699-48f075372bc5" />
+
+<img width="1906" height="857" alt="003" src="https://github.com/user-attachments/assets/4c7251af-248b-487c-ace5-05f40a05a70b" />
+
+<img width="1901" height="857" alt="004" src="https://github.com/user-attachments/assets/a9e07cfd-cce7-4b59-9202-33e42bef5dba" />
+
+<img width="1896" height="807" alt="005" src="https://github.com/user-attachments/assets/3ed9ac8d-efda-47b3-bab3-a0e6f9a50c2a" />
+
+<img width="1912" height="845" alt="006" src="https://github.com/user-attachments/assets/c56cc04b-cab8-4af5-9e2c-0d7db5dc020a" />
+
 
 
 # Deskmate — Support that knows when to ask
